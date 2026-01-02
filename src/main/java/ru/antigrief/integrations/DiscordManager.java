@@ -27,12 +27,7 @@ public class DiscordManager {
             return;
         }
 
-        // Simple JSON payload. For production, a proper JSON builder (like Gson) is
-        // better.
-        // Assuming simple text without special escaping for now to keep it
-        // dependency-free-ish
-        // or simple enough.
-        // Let's do basic escaping for double quotes.
+        // Simple JSON construction to avoid external dependencies.
         String safeTitle = escapeJson(title);
         String safeDesc = escapeJson(description);
 

@@ -2,7 +2,7 @@ name: AntiGriefSystem
 version: '${version}'
 main: ru.antigrief.AntiGriefSystem
 api-version: '1.13'
-authors: [AntiGravity]
+authors: [Antag0nis1]
 description: A plugin to protect servers with a trust system and item restrictions.
 commands:
   ags:

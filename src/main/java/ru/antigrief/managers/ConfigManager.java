@@ -27,11 +27,9 @@ public class ConfigManager {
         plugin.reloadConfig();
         FileConfiguration config = plugin.getConfig();
 
-        // 10 hours in ticks (20 ticks * 60 seconds * 60 minutes * 10 hours) = 720000 by
-        // default if missing
-        // Storing in config in minutes is more user friendly.
+        // Default 6 hours (360 minutes) if missing.
         long minutes = config.getLong("trusted-playtime-needed-minutes", 360);
-        // Store in milliseconds: minutes * 60 seconds * 1000 milliseconds
+        // Convert to milliseconds
         this.trustedPlaytimeNeeded = minutes * 60 * 1000L;
 
         this.discordWebhookUrl = config.getString("discord-webhook-url", "");

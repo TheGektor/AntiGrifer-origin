@@ -25,7 +25,7 @@ public class AntiGriefSystem extends JavaPlugin {
         // Managers
         this.configManager = new ConfigManager(this);
         this.localeManager = new LocaleManager(this);
-        this.databaseManager = new DatabaseManager(this); // Will implement next
+        this.databaseManager = new DatabaseManager(this);
         this.discordManager = new DiscordManager(this);
 
         // Handlers
