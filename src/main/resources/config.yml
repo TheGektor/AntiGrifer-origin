@@ -1,0 +1,19 @@
+# AntiGriefSystem Configuration
+
+# Time in minutes needed to become trusted
+trusted-playtime-needed-minutes: 360
+
+# List of items restricted for untrusted players
+restricted-items:
+  - TNT
+  - TNT_MINECART
+  - END_CRYSTAL
+  - RESPAWN_ANCHOR
+  - LAVA_BUCKET
+  - FLINT_AND_STEEL
+  - FIRE_CHARGE
+  - HOPPER
+  - HOPPER_MINECART
+
+# Discord Webhook URL for notifications
+discord-webhook-url: ""

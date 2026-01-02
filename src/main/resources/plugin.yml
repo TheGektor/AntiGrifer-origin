@@ -1,0 +1,15 @@
+name: AntiGriefSystem
+version: '${version}'
+main: ru.antigrief.AntiGriefSystem
+api-version: '1.13'
+authors: [AntiGravity]
+description: A plugin to protect servers with a trust system and item restrictions.
+commands:
+  ags:
+    description: Main command for AntiGriefSystem
+    usage: /ags <subcommand>
+    permission: ags.admin
+permissions:
+  ags.admin:
+    description: Allows full control of AntiGriefSystem
+    default: op
