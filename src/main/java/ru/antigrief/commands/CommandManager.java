@@ -11,9 +11,17 @@ import ru.antigrief.AntiGriefSystem;
 import ru.antigrief.data.PlayerData;
 
 import java.util.UUID;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 
-public class CommandManager implements CommandExecutor {
+import org.bukkit.command.TabCompleter;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
+public class CommandManager implements CommandExecutor, TabCompleter {
 
     private final AntiGriefSystem plugin;
 
@@ -25,7 +33,7 @@ public class CommandManager implements CommandExecutor {
     public boolean onCommand(CommandSender sender, Command command, String label,
             String[] args) {
         if (args.length == 0) {
-            sender.sendMessage(plugin.getLocaleManager().getMessage("usage"));
+            sender.sendMessage(plugin.getLocaleManager().getComponent("usage"));
             return true;
         }
 
@@ -33,18 +41,18 @@ public class CommandManager implements CommandExecutor {
 
         if (sub.equals("reload")) {
             if (!sender.hasPermission("ags.admin")) {
-                sender.sendMessage(plugin.getLocaleManager().getMessage("no-permission"));
+                sender.sendMessage(plugin.getLocaleManager().getComponent("no-permission"));
                 return true;
             }
             plugin.getConfigManager().loadConfig();
             plugin.getLocaleManager().loadLocale();
-            sender.sendMessage(plugin.getLocaleManager().getMessage("prefix") +
-                    plugin.getLocaleManager().getMessage("reload-success"));
+            sender.sendMessage(plugin.getLocaleManager().getPrefix()
+                    .append(plugin.getLocaleManager().getComponent("reload-success")));
             return true;
         }
 
         if (args.length < 2) {
-            sender.sendMessage(plugin.getLocaleManager().getMessage("usage"));
+            sender.sendMessage(plugin.getLocaleManager().getComponent("usage"));
             return true;
         }
 
@@ -55,7 +63,7 @@ public class CommandManager implements CommandExecutor {
             // In modern paper UUIDs are fetched if not in cache, assume we have it or user
             // is online
             if (target.getUniqueId() == null) {
-                sender.sendMessage(plugin.getLocaleManager().getMessage("player-not-found"));
+                sender.sendMessage(plugin.getLocaleManager().getComponent("player-not-found"));
                 return;
             }
             UUID uuid = target.getUniqueId();
@@ -78,52 +86,77 @@ public class CommandManager implements CommandExecutor {
     }
 
     private void handleSubCommand(CommandSender sender, String sub, String targetName, PlayerData data) {
-        String prefix = plugin.getLocaleManager().getMessage("prefix");
+        Component prefix = plugin.getLocaleManager().getPrefix();
 
         switch (sub) {
             case "trust":
                 if (data.isTrusted()) {
-                    sender.sendMessage(prefix
-                            + plugin.getLocaleManager().getMessage("already-trusted").replace("{player}", targetName));
+                    sender.sendMessage(prefix.append(plugin.getLocaleManager().getComponent("already-trusted",
+                            Placeholder.unparsed("player", targetName))));
                 } else {
                     data.setTrusted(true);
                     plugin.getPlayerHandler().updateAndSave(data.getUuid(), data);
-                    sender.sendMessage(prefix
-                            + plugin.getLocaleManager().getMessage("trust-success").replace("{player}", targetName));
-                    plugin.getDiscordManager().sendNotification("**Доверие выдано**",
-                            "Администратор **" + sender.getName() + "** выдал доверие игроку **" + targetName + "**.");
+                    sender.sendMessage(prefix.append(plugin.getLocaleManager().getComponent("trust-success",
+                            Placeholder.unparsed("player", targetName))));
+                    plugin.getDiscordManager().sendWebhook("trust-given", java.util.Map.of(
+                            "admin", sender.getName(),
+                            "player", targetName));
                 }
                 break;
             case "untrust":
                 if (!data.isTrusted()) {
-                    sender.sendMessage(prefix
-                            + plugin.getLocaleManager().getMessage("not-trusted").replace("{player}", targetName));
+                    sender.sendMessage(prefix.append(plugin.getLocaleManager().getComponent("not-trusted",
+                            Placeholder.unparsed("player", targetName))));
                 } else {
                     data.setTrusted(false);
                     plugin.getPlayerHandler().updateAndSave(data.getUuid(), data);
-                    sender.sendMessage(prefix
-                            + plugin.getLocaleManager().getMessage("untrust-success").replace("{player}", targetName));
-                    plugin.getDiscordManager().sendNotification("**Доверие снято**",
-                            "Администратор **" + sender.getName() + "** снял доверие с игрока **" + targetName + "**.");
+                    sender.sendMessage(prefix.append(plugin.getLocaleManager().getComponent("untrust-success",
+                            Placeholder.unparsed("player", targetName))));
+                    plugin.getDiscordManager().sendWebhook("trust-revoked", java.util.Map.of(
+                            "admin", sender.getName(),
+                            "player", targetName));
                 }
                 break;
             case "check":
                 long minutes = data.getPlaytime() / 60000;
                 if (data.isTrusted()) {
-                    sender.sendMessage(prefix + plugin.getLocaleManager().getMessage("check-status-trusted")
-                            .replace("{player}", targetName)
-                            .replace("{time}", String.valueOf(minutes)));
+                    sender.sendMessage(prefix.append(plugin.getLocaleManager().getComponent("check-status-trusted",
+                            Placeholder.unparsed("player", targetName),
+                            Placeholder.unparsed("time", String.valueOf(minutes)))));
                 } else {
                     long needed = plugin.getConfigManager().getTrustedPlaytimeNeeded() / 60000;
-                    sender.sendMessage(prefix + plugin.getLocaleManager().getMessage("check-status-untrusted")
-                            .replace("{player}", targetName)
-                            .replace("{time}", String.valueOf(minutes))
-                            .replace("{needed}", String.valueOf(needed)));
+                    sender.sendMessage(prefix.append(plugin.getLocaleManager().getComponent("check-status-untrusted",
+                            Placeholder.unparsed("player", targetName),
+                            Placeholder.unparsed("time", String.valueOf(minutes)),
+                            Placeholder.unparsed("needed", String.valueOf(needed)))));
                 }
                 break;
             default:
-                sender.sendMessage(plugin.getLocaleManager().getMessage("usage"));
+                sender.sendMessage(plugin.getLocaleManager().getComponent("usage"));
                 break;
         }
+    }
+
+    @Override
+    public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
+        List<String> completions = new ArrayList<>();
+
+        if (args.length == 1) {
+            List<String> subcommands = List.of("trust", "untrust", "check", "reload");
+            String input = args[0].toLowerCase();
+            for (String sub : subcommands) {
+                if (sub.startsWith(input)) {
+                    completions.add(sub);
+                }
+            }
+        } else if (args.length == 2) {
+            // Suggest players for trust/untrust/check
+            String sub = args[0].toLowerCase();
+            if (List.of("trust", "untrust", "check").contains(sub)) {
+                return null; // Return null to let Bukkit suggest online players
+            }
+        }
+
+        return completions;
     }
 }

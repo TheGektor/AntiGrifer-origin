@@ -52,7 +52,7 @@ public class DatabaseManager {
         }
     }
 
-    public PlayerData loadPlayer(UUID uuid) {
+    public synchronized PlayerData loadPlayer(UUID uuid) {
         try (PreparedStatement ps = connection.prepareStatement("SELECT * FROM players WHERE uuid = ?")) {
             ps.setString(1, uuid.toString());
             ResultSet rs = ps.executeQuery();
@@ -67,7 +67,7 @@ public class DatabaseManager {
         return new PlayerData(uuid, 0, false);
     }
 
-    public void savePlayer(PlayerData data) {
+    public synchronized void savePlayer(PlayerData data) {
         try (PreparedStatement ps = connection.prepareStatement(
                 "INSERT OR REPLACE INTO players (uuid, playtime, trusted) VALUES (?, ?, ?)")) {
             ps.setString(1, data.getUuid().toString());

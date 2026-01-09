@@ -1,0 +1,35 @@
+messages:
+  trust-given:
+    title: "🛡️ Доверие выдано"
+    description: "Администратор **{admin}** выдал статус доверенного игроку **{player}**.\nТеперь у него есть доступ к ограниченным предметам."
+    color: "#2ECC71" # Emerald Green
+    footer: "AntiGriefSystem • Log"
+    timestamp: true
+  
+  trust-revoked:
+    title: "🚫 Доверие снято"
+    description: "Администратор **{admin}** лишил игрока **{player}** статуса доверенного.\nДоступ к ограниченным предметам закрыт."
+    color: "#E74C3C" # Alizarin Red
+    footer: "AntiGriefSystem • Log"
+    timestamp: true
+
+  promoted:
+    title: "🎉 Автоматическое повышение"
+    description: "Игрок **{player}** провел достаточно времени на сервере и получил статус **доверенного**!"
+    color: "#3498DB" # Peter River Blue
+    footer: "AntiGriefSystem • AutoPromote"
+    timestamp: true
+
+  suspicious-activity:
+    title: "⚠️ Подозрительное действие"
+    description: "Игрок **{player}** попытался использовать запрещенный предмет.\n\n👤 **Игрок:** `{player}`\n📦 **Предмет:** `{item}`\n🔨 **Действие:** `{action}`"
+    color: "#F1C40F" # Sun Flower Yellow
+    footer: "AntiGriefSystem • Security"
+    timestamp: true
+
+  mechanism-activity:
+    title: "⚙️ Активность механизма"
+    description: "Механизм попытался использовать запрещенный предмет.\n\n📍 **Координаты:** `{location}`\n📦 **Предмет:** `{item}`"
+    color: "#E67E22" # Carrot Orange
+    footer: "AntiGriefSystem • Automation"
+    timestamp: true

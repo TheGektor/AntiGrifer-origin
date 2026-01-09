@@ -10,6 +10,7 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
 import ru.antigrief.AntiGriefSystem;
 import ru.antigrief.data.PlayerData;
+import net.kyori.adventure.text.Component;
 
 public class RestrictionListener implements Listener {
 
@@ -28,12 +29,14 @@ public class RestrictionListener implements Listener {
         // If data is null (loading error) treat as untrusted for safety
         if (data == null || !data.isTrusted()) {
             if (!player.hasPermission("ags.bypass")) {
-                player.sendMessage(plugin.getLocaleManager().getMessage("prefix") +
-                        plugin.getLocaleManager().getMessage("restricted-action"));
+                Component msg = plugin.getLocaleManager().getPrefix()
+                        .append(plugin.getLocaleManager().getComponent("restricted-action"));
+                player.sendMessage(msg);
 
-                plugin.getDiscordManager().sendNotification("**Попытка грифа?**",
-                        "Игрок **" + player.getName() + "** попытался использовать **" + material.name() + "** ("
-                                + action + "), но он не доверенный.");
+                plugin.getDiscordManager().sendWebhook("suspicious-activity", java.util.Map.of(
+                        "player", player.getName(),
+                        "item", material.name(),
+                        "action", action));
                 return true; // Restricted
             }
         }
@@ -78,6 +81,26 @@ public class RestrictionListener implements Listener {
                     event.setCancelled(true);
                 }
             }
+        }
+    }
+
+    @EventHandler
+    public void onDispense(org.bukkit.event.block.BlockDispenseEvent event) {
+        if (event.getItem() == null)
+            return;
+        Material mat = event.getItem().getType();
+
+        if (plugin.getConfigManager().getRestrictedItems().contains(mat)) {
+            event.setCancelled(true);
+
+            // Notify Discord about mechanism activity
+            String locStr = event.getBlock().getLocation().getBlockX() + ", " +
+                    event.getBlock().getLocation().getBlockY() + ", " +
+                    event.getBlock().getLocation().getBlockZ();
+
+            plugin.getDiscordManager().sendWebhook("mechanism-activity", java.util.Map.of(
+                    "location", locStr,
+                    "item", mat.name()));
         }
     }
 }

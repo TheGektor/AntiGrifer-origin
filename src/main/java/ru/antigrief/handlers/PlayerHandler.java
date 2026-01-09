@@ -13,6 +13,7 @@ import ru.antigrief.data.PlayerData;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import net.kyori.adventure.text.Component;
 
 public class PlayerHandler implements Listener {
 
@@ -51,11 +52,12 @@ public class PlayerHandler implements Listener {
                 new BukkitRunnable() {
                     @Override
                     public void run() {
-                        player.sendMessage(plugin.getLocaleManager().getMessage("prefix") +
-                                plugin.getLocaleManager().getMessage("promoted-message"));
+                        Component message = plugin.getLocaleManager().getPrefix()
+                                .append(plugin.getLocaleManager().getComponent("promoted-message"));
+                        player.sendMessage(message);
                         // Notify Discord
-                        plugin.getDiscordManager().sendNotification("**Доверие выдано**",
-                                "Игрок **" + player.getName() + "** получил статус доверенного (автоматически).");
+                        plugin.getDiscordManager().sendWebhook("promoted", java.util.Map.of(
+                                "player", player.getName()));
                     }
                 }.runTask(plugin);
                 plugin.getDatabaseManager().savePlayer(data);

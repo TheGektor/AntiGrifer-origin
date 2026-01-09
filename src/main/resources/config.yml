@@ -1,5 +1,8 @@
 # AntiGriefSystem Configuration
 
+# Language: en or ru
+language: en
+
 # Time in minutes needed to become trusted
 trusted-playtime-needed-minutes: 360
 

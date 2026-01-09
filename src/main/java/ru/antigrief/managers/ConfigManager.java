@@ -4,6 +4,8 @@ import org.bukkit.Material;
 import org.bukkit.configuration.file.FileConfiguration;
 import ru.antigrief.AntiGriefSystem;
 
+import org.bukkit.configuration.file.YamlConfiguration;
+import java.io.File;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -14,6 +16,7 @@ public class ConfigManager {
     private final AntiGriefSystem plugin;
     private long trustedPlaytimeNeeded;
     private Set<Material> restrictedItems;
+    private YamlConfiguration discordConfig;
     private String discordWebhookUrl;
 
     public ConfigManager(AntiGriefSystem plugin) {
@@ -44,6 +47,16 @@ public class ConfigManager {
                 plugin.getLogger().log(Level.WARNING, "Invalid material in config: " + itemName);
             }
         }
+
+        loadDiscordConfig();
+    }
+
+    public void loadDiscordConfig() {
+        File discordFile = new File(plugin.getDataFolder(), "discord.yml");
+        if (!discordFile.exists()) {
+            plugin.saveResource("discord.yml", false);
+        }
+        discordConfig = YamlConfiguration.loadConfiguration(discordFile);
     }
 
     public long getTrustedPlaytimeNeeded() {
@@ -56,5 +69,14 @@ public class ConfigManager {
 
     public String getDiscordWebhookUrl() {
         return discordWebhookUrl;
+    }
+
+    public YamlConfiguration getDiscordConfig() {
+        return discordConfig;
+    }
+
+    public String getLanguage() {
+        // Default to 'en' if not set
+        return plugin.getConfig().getString("language", "en");
     }
 }

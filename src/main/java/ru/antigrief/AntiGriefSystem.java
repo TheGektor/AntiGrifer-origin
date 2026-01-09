@@ -37,6 +37,7 @@ public class AntiGriefSystem extends JavaPlugin {
 
         // Commands
         getCommand("ags").setExecutor(new CommandManager(this));
+        getCommand("ags").setTabCompleter((CommandManager) getCommand("ags").getExecutor());
 
         getLogger().info("AntiGriefSystem enabled!");
     }

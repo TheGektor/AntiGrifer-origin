@@ -1,12 +1,15 @@
 package ru.antigrief.integrations;
 
 import ru.antigrief.AntiGriefSystem;
+import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
+import java.time.Instant;
+import java.util.Map;
 
 public class DiscordManager {
 
@@ -21,18 +24,28 @@ public class DiscordManager {
                 .build();
     }
 
-    public void sendNotification(String title, String description) {
+    public void sendWebhook(String key, Map<String, String> placeholders) {
         String webhookUrl = plugin.getConfigManager().getDiscordWebhookUrl();
         if (webhookUrl == null || webhookUrl.isEmpty()) {
             return;
         }
 
-        // Simple JSON construction to avoid external dependencies.
-        String safeTitle = escapeJson(title);
-        String safeDesc = escapeJson(description);
+        YamlConfiguration config = plugin.getConfigManager().getDiscordConfig();
+        if (!config.contains("messages." + key)) {
+            plugin.getLogger().warning("Discord webhook key not found: " + key);
+            return;
+        }
 
-        String json = String.format("{\"embeds\": [{\"title\": \"%s\", \"description\": \"%s\", \"color\": 16711680}]}",
-                safeTitle, safeDesc);
+        String path = "messages." + key;
+        String title = applyPlaceholders(config.getString(path + ".title", ""), placeholders);
+        String description = applyPlaceholders(config.getString(path + ".description", ""), placeholders);
+        String colorHex = config.getString(path + ".color", "#FFFFFF");
+        String footerText = config.getString(path + ".footer", "AntiGriefSystem");
+        boolean timestamp = config.getBoolean(path + ".timestamp", true);
+
+        int colorDecimal = parseColor(colorHex);
+
+        String json = buildJson(title, description, colorDecimal, footerText, timestamp);
 
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(webhookUrl))
@@ -49,7 +62,65 @@ public class DiscordManager {
                 });
     }
 
+    // Deprecated method shim for backward compatibility if any straightforward
+    // calls exist
+    public void sendNotification(String title, String description) {
+        // Fallback or use a generic template if needed, but for now we won't use it.
+        // Or we can just log a warning.
+    }
+
+    private String applyPlaceholders(String text, Map<String, String> placeholders) {
+        if (text == null)
+            return "";
+        for (Map.Entry<String, String> entry : placeholders.entrySet()) {
+            text = text.replace("{" + entry.getKey() + "}", entry.getValue());
+        }
+        return text;
+    }
+
+    private int parseColor(String hex) {
+        if (hex.startsWith("#")) {
+            hex = hex.substring(1);
+        }
+        try {
+            return Integer.parseInt(hex, 16);
+        } catch (NumberFormatException e) {
+            return 0xFFFFFF;
+        }
+    }
+
+    private String buildJson(String title, String description, int color, String footer, boolean timestamp) {
+        String safeTitle = escapeJson(title);
+        String safeDesc = escapeJson(description);
+        String safeFooter = escapeJson(footer);
+
+        String timestampJson = "";
+        if (timestamp) {
+            timestampJson = ", \"timestamp\": \"" + Instant.now().toString() + "\"";
+        }
+
+        return String.format(
+                "{" +
+                        "  \"embeds\": [{" +
+                        "    \"title\": \"%s\"," +
+                        "    \"description\": \"%s\"," +
+                        "    \"color\": %d," +
+                        "    \"footer\": {\"text\": \"%s\"}" +
+                        "%s" +
+                        "  }]" +
+                        "}",
+                safeTitle, safeDesc, color, safeFooter, timestampJson);
+    }
+
     private String escapeJson(String text) {
-        return text.replace("\"", "\\\"").replace("\n", "\\n");
+        if (text == null)
+            return "";
+        return text.replace("\\", "\\\\")
+                .replace("\"", "\\\"")
+                .replace("\b", "\\b")
+                .replace("\f", "\\f")
+                .replace("\n", "\\n")
+                .replace("\r", "\\r")
+                .replace("\t", "\\t");
     }
 }
