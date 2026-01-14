@@ -11,4 +11,4 @@ changelog.md
 .DS_Store
 target/
 out/
-COMMIT_MESSAGE.md
+commit.md

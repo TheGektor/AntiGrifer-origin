@@ -9,7 +9,17 @@ commands:
     description: Main command for AntiGriefSystem
     usage: /ags <subcommand>
     permission: ags.admin
+  feedback:
+    description: Send feedback to developers
+    usage: /feedback <subcommand>
+    permission: plugin.feedback.send
 permissions:
   ags.admin:
     description: Allows full control of AntiGriefSystem
     default: op
+  plugin.feedback.send:
+    description: Allow sending feedback
+    default: true
+  plugin.feedback.history:
+    description: Allow viewing feedback history
+    default: true
