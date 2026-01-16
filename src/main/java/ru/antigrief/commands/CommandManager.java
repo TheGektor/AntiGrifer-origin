@@ -19,7 +19,6 @@ import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.command.TabCompleter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class CommandManager implements CommandExecutor, TabCompleter {
 
@@ -39,6 +38,7 @@ public class CommandManager implements CommandExecutor, TabCompleter {
 
         String sub = args[0].toLowerCase();
 
+        // 1. Handle commands that don't need a target player arg immediately
         if (sub.equals("reload")) {
             if (!sender.hasPermission("ags.admin")) {
                 sender.sendMessage(plugin.getLocaleManager().getComponent("no-permission"));
@@ -51,6 +51,25 @@ public class CommandManager implements CommandExecutor, TabCompleter {
             return true;
         }
 
+        if (sub.equals("internal")) {
+            if (!sender.hasPermission("ags.alerts")) {
+                sender.sendMessage(plugin.getLocaleManager().getComponent("no-permission"));
+                return true;
+            }
+            // Delegate /ags internal ...
+            if (args.length < 3 || !args[1].equalsIgnoreCase("spectate")) {
+                return true; // Invalid usage, just ignore or print dev usage
+            }
+            // /ags internal spectate <player>
+            // We need to shift args to match what SpectateCommand expects: [targetName]
+            // SpectateCommand expects args[0] to be targetName.
+            // Here args is ["internal", "spectate", "targetName"]
+            String[] spectateArgs = new String[]{args[2]};
+            new ru.antigrief.features.alerts.SpectateCommand(plugin).onCommand(sender, command, label, spectateArgs);
+            return true;
+        }
+
+        // 2. Handle commands that require a target player (trust, untrust, check)
         if (args.length < 2) {
             sender.sendMessage(plugin.getLocaleManager().getComponent("usage"));
             return true;
@@ -60,8 +79,7 @@ public class CommandManager implements CommandExecutor, TabCompleter {
         // Async fetch player
         CompletableFuture.runAsync(() -> {
             OfflinePlayer target = Bukkit.getOfflinePlayer(targetName);
-            // In modern paper UUIDs are fetched if not in cache, assume we have it or user
-            // is online
+            // In modern paper UUIDs are fetched if not in cache, assume we have it or user is online
             if (target.getUniqueId() == null) {
                 sender.sendMessage(plugin.getLocaleManager().getComponent("player-not-found"));
                 return;
