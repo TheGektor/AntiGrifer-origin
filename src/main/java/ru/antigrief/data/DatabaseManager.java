@@ -1,97 +1,110 @@
 package ru.antigrief.data;
 
-import com.zaxxer.hikari.HikariConfig;
-import com.zaxxer.hikari.HikariDataSource;
 import ru.antigrief.AntiGriefSystem;
-
-import java.io.File;
 import java.sql.Connection;
+import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.UUID;
 import java.util.logging.Level;
 
 public class DatabaseManager {
 
     private final AntiGriefSystem plugin;
-    private HikariDataSource dataSource;
+    private Connection connection;
 
     public DatabaseManager(AntiGriefSystem plugin) {
         this.plugin = plugin;
-        initializeDatabase();
     }
 
-    private void initializeDatabase() {
-        File dbFile = new File(plugin.getDataFolder(), "database.db");
-        if (!dbFile.getParentFile().exists()) {
-            boolean created = dbFile.getParentFile().mkdirs();
-            if (!created && !dbFile.getParentFile().exists()) {
-                 plugin.getLogger().severe("Could not create database directory!");
-                 return;
-            }
-        }
-
-        HikariConfig config = new HikariConfig();
-        config.setJdbcUrl("jdbc:sqlite:" + dbFile.getAbsolutePath());
-        config.setDriverClassName("org.sqlite.JDBC");
-        config.setMaximumPoolSize(10);
-        config.setPoolName("AntiGriefPool");
-        config.setConnectionTestQuery("SELECT 1");
-
+    public boolean initialize() {
         try {
-            this.dataSource = new HikariDataSource(config);
-            try (Connection conn = dataSource.getConnection();
-                 Statement statement = conn.createStatement()) {
-                statement.execute("CREATE TABLE IF NOT EXISTS players (" +
-                        "uuid TEXT PRIMARY KEY, " +
-                        "playtime LONG, " +
-                        "trusted BOOLEAN)");
+            // Ensure data folder exists
+            if (!plugin.getDataFolder().exists()) {
+                if (!plugin.getDataFolder().mkdirs()) {
+                    plugin.getLogger().severe("Failed to create plugin directory!");
+                    return false;
+                }
             }
+
+            // Drivers are loaded automatically via libraries in plugin.yml
+            String dbPath = new java.io.File(plugin.getDataFolder(), "database.db").getAbsolutePath();
+            connection = DriverManager.getConnection("jdbc:sqlite:" + dbPath);
+            createTables();
+            plugin.getLogger().info("Database connected successfully.");
+            return true;
+        } catch (SQLException e) {
+            plugin.getLogger().log(Level.SEVERE, "Database connection failed (SQLException)", e);
+            return false;
         } catch (Exception e) {
-            plugin.getLogger().log(Level.SEVERE, "Could not initialize database", e);
+            plugin.getLogger().log(Level.SEVERE, "Database connection failed (General)", e);
+            return false;
         }
     }
 
-    public void close() {
-        if (dataSource != null && !dataSource.isClosed()) {
-            dataSource.close();
+    private void createTables() {
+        try (PreparedStatement ps = connection.prepareStatement(
+                "CREATE TABLE IF NOT EXISTS players (uuid VARCHAR(36) PRIMARY KEY, trusted BOOLEAN, playtime LONG)")) {
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            plugin.getLogger().warning("Failed to create tables: " + e.getMessage());
         }
     }
 
-    public Connection getConnection() throws SQLException {
-        if (dataSource == null) throw new SQLException("DataSource is not initialized.");
-        return dataSource.getConnection();
+    public void closeConnection() {
+        try {
+            if (connection != null && !connection.isClosed()) {
+                connection.close();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void ensureConnection() throws SQLException {
+        if (connection == null || connection.isClosed()) {
+            String dbPath = new java.io.File(plugin.getDataFolder(), "database.db").getAbsolutePath();
+            connection = DriverManager.getConnection("jdbc:sqlite:" + dbPath);
+        }
     }
 
     public PlayerData loadPlayer(UUID uuid) {
-        try (Connection conn = getConnection();
-             PreparedStatement ps = conn.prepareStatement("SELECT * FROM players WHERE uuid = ?")) {
-            ps.setString(1, uuid.toString());
-            try (ResultSet rs = ps.executeQuery()) {
+        try {
+            ensureConnection();
+            try (PreparedStatement ps = connection.prepareStatement("SELECT * FROM players WHERE uuid = ?")) {
+                ps.setString(1, uuid.toString());
+                ResultSet rs = ps.executeQuery();
                 if (rs.next()) {
-                    long playtime = rs.getLong("playtime");
-                    boolean trusted = rs.getBoolean("trusted");
-                    return new PlayerData(uuid, playtime, trusted);
+                    return new PlayerData(
+                            UUID.fromString(rs.getString("uuid")),
+                            rs.getLong("playtime"),
+                            rs.getBoolean("trusted"));
                 }
             }
         } catch (SQLException e) {
-            plugin.getLogger().log(Level.SEVERE, "Error loading player " + uuid, e);
+            e.printStackTrace();
         }
+        // Return default data if not found or error
         return new PlayerData(uuid, 0, false);
     }
 
     public void savePlayer(PlayerData data) {
-        try (Connection conn = getConnection();
-             PreparedStatement ps = conn.prepareStatement(
-                "INSERT OR REPLACE INTO players (uuid, playtime, trusted) VALUES (?, ?, ?)")) {
-            ps.setString(1, data.getUuid().toString());
-            ps.setLong(2, data.getPlaytime());
-            ps.setBoolean(3, data.isTrusted());
-            ps.executeUpdate();
+         try {
+            ensureConnection();
+            try (PreparedStatement ps = connection.prepareStatement(
+                    "INSERT OR REPLACE INTO players (uuid, trusted, playtime) VALUES (?, ?, ?)")) {
+                ps.setString(1, data.getUuid().toString());
+                ps.setBoolean(2, data.isTrusted());
+                ps.setLong(3, data.getPlaytime());
+                ps.executeUpdate();
+            }
         } catch (SQLException e) {
-            plugin.getLogger().log(Level.SEVERE, "Error saving player " + data.getUuid(), e);
+            e.printStackTrace();
         }
+    }
+    
+    public Connection getConnection() {
+        return connection;
     }
 }

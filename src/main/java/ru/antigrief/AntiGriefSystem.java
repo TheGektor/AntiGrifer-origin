@@ -5,39 +5,46 @@ import ru.antigrief.managers.ConfigManager;
 import ru.antigrief.managers.LocaleManager;
 import ru.antigrief.data.DatabaseManager;
 import ru.antigrief.handlers.PlayerHandler;
-import ru.antigrief.listeners.RestrictionListener;
+import ru.antigrief.features.alerts.AlertManager;
 import ru.antigrief.integrations.DiscordManager;
 import ru.antigrief.commands.CommandManager;
-import ru.antigrief.features.feedback.FeedbackManager;
 import ru.antigrief.features.feedback.FeedbackCommand;
+import ru.antigrief.features.feedback.FeedbackManager;
+import ru.antigrief.listeners.RestrictionListener;
 
 public class AntiGriefSystem extends JavaPlugin {
 
-    private static AntiGriefSystem instance;
     private ConfigManager configManager;
     private LocaleManager localeManager;
-    private DatabaseManager databaseManager;
     private PlayerHandler playerHandler;
     private DiscordManager discordManager;
+    private AlertManager alertManager;
     private FeedbackManager feedbackManager;
+    private DatabaseManager databaseManager;
 
     @Override
     public void onEnable() {
-        instance = this;
+        // Load config
+        configManager = new ConfigManager(this);
+        configManager.loadConfig();
 
-        // Managers
-        this.configManager = new ConfigManager(this);
-        this.localeManager = new LocaleManager(this);
-        this.databaseManager = new DatabaseManager(this);
-        this.discordManager = new DiscordManager(this);
-        this.feedbackManager = new FeedbackManager(this);
+        // Load locale
+        localeManager = new LocaleManager(this);
+        localeManager.loadLocale();
 
-        // Handlers
-        this.playerHandler = new PlayerHandler(this);
+        // Connect to DB
+        databaseManager = new DatabaseManager(this);
+        if (!databaseManager.initialize()) {
+            getLogger().severe("Could not initialize database! Disabling plugin...");
+            getServer().getPluginManager().disablePlugin(this);
+            return;
+        }
 
-        // Listeners
-        getServer().getPluginManager().registerEvents(playerHandler, this);
-        getServer().getPluginManager().registerEvents(new RestrictionListener(this), this);
+        // Handlers and Managers
+        playerHandler = new PlayerHandler(this);
+        discordManager = new DiscordManager(this);
+        alertManager = new AlertManager(this);
+        feedbackManager = new FeedbackManager(this);
 
         // Commands
         getCommand("ags").setExecutor(new CommandManager(this));
@@ -45,22 +52,19 @@ public class AntiGriefSystem extends JavaPlugin {
 
         getCommand("feedback").setExecutor(new FeedbackCommand(this.feedbackManager));
 
+        // Listeners
+        getServer().getPluginManager().registerEvents(playerHandler, this);
+        getServer().getPluginManager().registerEvents(new RestrictionListener(this), this);
+
         getLogger().info("AntiGriefSystem enabled!");
     }
 
     @Override
     public void onDisable() {
-        if (playerHandler != null) {
-            playerHandler.saveAll();
-        }
         if (databaseManager != null) {
-            databaseManager.close();
+            databaseManager.closeConnection();
         }
         getLogger().info("AntiGriefSystem disabled!");
-    }
-
-    public static AntiGriefSystem getInstance() {
-        return instance;
     }
 
     public ConfigManager getConfigManager() {
@@ -70,7 +74,7 @@ public class AntiGriefSystem extends JavaPlugin {
     public LocaleManager getLocaleManager() {
         return localeManager;
     }
-
+    
     public DatabaseManager getDatabaseManager() {
         return databaseManager;
     }
@@ -81,6 +85,10 @@ public class AntiGriefSystem extends JavaPlugin {
 
     public DiscordManager getDiscordManager() {
         return discordManager;
+    }
+
+    public AlertManager getAlertManager() {
+        return alertManager;
     }
 
     public FeedbackManager getFeedbackManager() {

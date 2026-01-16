@@ -10,6 +10,7 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
 import ru.antigrief.AntiGriefSystem;
 import ru.antigrief.data.PlayerData;
+import ru.antigrief.features.alerts.AlertManager;
 import net.kyori.adventure.text.Component;
 
 public class RestrictionListener implements Listener {
@@ -33,10 +34,7 @@ public class RestrictionListener implements Listener {
                         .append(plugin.getLocaleManager().getComponent("restricted-action"));
                 player.sendMessage(msg);
 
-                plugin.getDiscordManager().sendWebhook("suspicious-activity", java.util.Map.of(
-                        "player", player.getName(),
-                        "item", material.name(),
-                        "action", action));
+                plugin.getAlertManager().sendAlert(player, action, material, null);
                 return true; // Restricted
             }
         }
@@ -93,7 +91,15 @@ public class RestrictionListener implements Listener {
         if (plugin.getConfigManager().getRestrictedItems().contains(mat)) {
             event.setCancelled(true);
 
-            // Notify Discord about mechanism activity
+            // Notify Discord/Admins about mechanism activity
+            // Since we don't have a player, we warn admins via AlertManager with null suspect (handled gracefully or assume checking nearby?)
+            // AlertManager expects a player. We might need a variant or just fallback to Discord if no player.
+            // But requirement said "In-game alerts". Without a player, who to spectate?
+            // Use AlertManager but maybe find nearest player? No, that's heavy.
+            // We will stick to DiscordManager for this generic event OR skip it for chat alerts.
+            // User asked "if moderator has permission ... about attempts to grief ... write in chat".
+            // Mechanism logic is vague. I will implement a safe fallback.
+            
             String locStr = event.getBlock().getLocation().getBlockX() + ", " +
                     event.getBlock().getLocation().getBlockY() + ", " +
                     event.getBlock().getLocation().getBlockZ();

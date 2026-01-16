@@ -1,7 +1,7 @@
 name: AntiGriefSystem
 version: '${version}'
 main: ru.antigrief.AntiGriefSystem
-api-version: '1.13'
+api-version: '1.21'
 authors: [Antag0nis1]
 description: A plugin to protect servers with a trust system and item restrictions.
 commands:
@@ -23,3 +23,10 @@ permissions:
   plugin.feedback.history:
     description: Allow viewing feedback history
     default: true
+  ags.alerts:
+    description: Receive in-game cheat/restriction alerts
+    default: op
+libraries:
+  - org.xerial:sqlite-jdbc:3.46.0.0
+  - com.zaxxer:HikariCP:5.1.0
+  - org.slf4j:slf4j-simple:2.0.9
