@@ -1,25 +1,28 @@
 name: AntiGriefSystem
 version: '${version}'
 main: ru.antigrief.AntiGriefSystem
-api-version: '1.13'
+api-version: '1.20'
 authors: [Antag0nis1]
-description: A plugin to protect servers with a trust system and item restrictions.
+description: Modern anti-grief solution with alerts and playtime tracking.
+website: https://github.com/Antag0nis1/AntiGriefSystem
+
+libraries:
+  - com.zaxxer:HikariCP:5.0.1
+  - org.xerial:sqlite-jdbc:3.43.0.0
+  # Paper includes Gson, but defining it ensures version consistency if needed
+  # - com.google.code.gson:gson:2.10.1 
+
 commands:
   ags:
     description: Main command for AntiGriefSystem
     usage: /ags <subcommand>
     permission: ags.admin
-  feedback:
-    description: Send feedback to developers
-    usage: /feedback <subcommand>
-    permission: plugin.feedback.send
+    aliases: [antigrief]
+
 permissions:
   ags.admin:
-    description: Allows full control of AntiGriefSystem
+    description: Access to all plugin commands
     default: op
-  plugin.feedback.send:
-    description: Allow sending feedback
-    default: true
-  plugin.feedback.history:
-    description: Allow viewing feedback history
-    default: true
+  ags.alerts.view:
+    description: Receive grief alerts
+    default: op

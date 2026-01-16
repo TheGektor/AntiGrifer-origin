@@ -1,0 +1,7 @@
+prefix: "<gradient:#00AA00:#55FF55>AGS</gradient> <dark_gray>»</dark_gray> "
+no_permission: "<prefix><red>You don't have permission.</red>"
+
+update:
+  available: "<prefix><green>Update found!</green> <gray>Current: <white>{current}</white> -> New: <green>{latest}</green></gray>"
+  none: "<prefix><green>You are running the latest version.</green>"
+  checking: "<prefix><gray>Checking for updates...</gray>"

@@ -1,89 +1,69 @@
 package ru.antigrief;
 
 import org.bukkit.plugin.java.JavaPlugin;
-import ru.antigrief.managers.ConfigManager;
-import ru.antigrief.managers.LocaleManager;
-import ru.antigrief.data.DatabaseManager;
-import ru.antigrief.handlers.PlayerHandler;
-import ru.antigrief.listeners.RestrictionListener;
-import ru.antigrief.integrations.DiscordManager;
-import ru.antigrief.commands.CommandManager;
-import ru.antigrief.features.feedback.FeedbackManager;
-import ru.antigrief.features.feedback.FeedbackCommand;
 
+import ru.antigrief.core.database.DatabaseManager;
+import ru.antigrief.core.localization.LanguageManager;
+import ru.antigrief.core.version.VersionManager;
+import ru.antigrief.features.alerts.AlertListener;
+import ru.antigrief.features.alerts.AlertManager;
+import ru.antigrief.features.playtime.PlaytimeListener;
+import ru.antigrief.features.playtime.PlaytimeManager;
+import ru.antigrief.features.update_system.UpdateCommand;
+import ru.antigrief.features.update_system.UpdateManager;
+
+/**
+ * Главный класс плагина AntiGriefSystem.
+ *
+ * @author Antag0nis1
+ */
 public class AntiGriefSystem extends JavaPlugin {
 
-    private static AntiGriefSystem instance;
-    private ConfigManager configManager;
-    private LocaleManager localeManager;
     private DatabaseManager databaseManager;
-    private PlayerHandler playerHandler;
-    private DiscordManager discordManager;
-    private FeedbackManager feedbackManager;
+    private LanguageManager languageManager;
+    private VersionManager versionManager;
+    private AlertManager alertManager;
+    private PlaytimeManager playtimeManager;
+    private UpdateManager updateManager;
 
     @Override
     public void onEnable() {
-        instance = this;
+        // 1. Сохранение дефолтного конфига
+        saveDefaultConfig();
 
-        // Managers
-        this.configManager = new ConfigManager(this);
-        this.localeManager = new LocaleManager(this);
+        // 2. Инициализация ядра
+        this.languageManager = new LanguageManager(this);
+        this.languageManager.loadLanguage(getConfig().getString("language", "ru"));
+        
         this.databaseManager = new DatabaseManager(this);
-        this.discordManager = new DiscordManager(this);
-        this.feedbackManager = new FeedbackManager(this);
+        
+        this.versionManager = new VersionManager(this);
+        this.updateManager = new UpdateManager(this, versionManager);
+        this.updateManager.startupCheck();
 
-        // Handlers
-        this.playerHandler = new PlayerHandler(this);
+        // 3. Инициализация фич
+        this.alertManager = new AlertManager(this);
+        getServer().getPluginManager().registerEvents(new AlertListener(alertManager), this);
 
-        // Listeners
-        getServer().getPluginManager().registerEvents(playerHandler, this);
-        getServer().getPluginManager().registerEvents(new RestrictionListener(this), this);
+        this.playtimeManager = new PlaytimeManager(this, databaseManager);
+        getServer().getPluginManager().registerEvents(new PlaytimeListener(playtimeManager), this);
 
-        // Commands
-        getCommand("ags").setExecutor(new CommandManager(this));
-        getCommand("ags").setTabCompleter((CommandManager) getCommand("ags").getExecutor());
+        // 4. Регистрация команд
+        if (getCommand("ags") != null) {
+            getCommand("ags").setExecutor(new UpdateCommand(updateManager));
+        }
 
-        getCommand("feedback").setExecutor(new FeedbackCommand(this.feedbackManager));
-
-        getLogger().info("AntiGriefSystem enabled!");
+        getLogger().info("AntiGriefSystem enabled successfully!");
     }
 
     @Override
     public void onDisable() {
-        if (playerHandler != null) {
-            playerHandler.saveAll();
-        }
         if (databaseManager != null) {
             databaseManager.close();
         }
-        getLogger().info("AntiGriefSystem disabled!");
+        getLogger().info("AntiGriefSystem disabled.");
     }
-
-    public static AntiGriefSystem getInstance() {
-        return instance;
-    }
-
-    public ConfigManager getConfigManager() {
-        return configManager;
-    }
-
-    public LocaleManager getLocaleManager() {
-        return localeManager;
-    }
-
-    public DatabaseManager getDatabaseManager() {
-        return databaseManager;
-    }
-
-    public PlayerHandler getPlayerHandler() {
-        return playerHandler;
-    }
-
-    public DiscordManager getDiscordManager() {
-        return discordManager;
-    }
-
-    public FeedbackManager getFeedbackManager() {
-        return feedbackManager;
-    }
+    
+    public DatabaseManager getDatabaseManager() { return databaseManager; }
+    public LanguageManager getLanguageManager() { return languageManager; }
 }

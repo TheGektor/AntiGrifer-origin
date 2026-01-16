@@ -1,0 +1,7 @@
+prefix: "<gradient:#00AA00:#55FF55>AGS</gradient> <dark_gray>»</dark_gray> "
+no_permission: "<prefix><red>У вас нет прав.</red>"
+
+update:
+  available: "<prefix><green>Найдено обновление!</green> <gray>Текущая: <white>{current}</white> -> Новая: <green>{latest}</green></gray>"
+  none: "<prefix><green>Вы используете последнюю версию.</green>"
+  checking: "<prefix><gray>Проверка обновлений...</gray>"
