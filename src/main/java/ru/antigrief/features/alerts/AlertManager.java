@@ -28,16 +28,16 @@ public class AlertManager {
         
         // 1. In-game broadcast to admins
         Component message = miniMessage.deserialize(
-                "<dark_red>[AGS] <red>ВНИМАНИЕ! <yellow><suspect> <gray>пытается <red><action> <yellow><item> <gray>в <gold><location>",
+                "<gradient:#FF512F:#DD2476><bold>[AGS]</bold></gradient> <dark_gray>| <white><suspect> <gray>-> <red><action> <yellow><item> <dark_gray>@ <gold><location>",
                 Placeholder.component("suspect", Component.text(suspect.getName())),
                 Placeholder.unparsed("action", action),
                 Placeholder.unparsed("item", itemName),
                 Placeholder.unparsed("location", getLocationString(suspect))
         );
 
-        Component spectateButton = miniMessage.deserialize(" <dark_gray>[<green><bold>СЛЕДИТЬ<reset><dark_gray>]")
+        Component spectateButton = miniMessage.deserialize(" <white>[<gradient:#00F260:#0575E6><bold>СЛЕЖКА</bold></gradient><white>]")
                 .clickEvent(ClickEvent.runCommand("/ags internal spectate " + suspect.getName()))
-                .hoverEvent(HoverEvent.showText(Component.text("Нажмите, чтобы телепортироваться")));
+                .hoverEvent(HoverEvent.showText(Component.text("Нажмите для слежки", net.kyori.adventure.text.format.NamedTextColor.GREEN)));
 
         Component finalMessage = message.append(spectateButton);
 

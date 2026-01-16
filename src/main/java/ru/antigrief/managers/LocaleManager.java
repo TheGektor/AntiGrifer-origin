@@ -28,7 +28,10 @@ public class LocaleManager {
     }
 
     public Component getComponent(String key, TagResolver... placeholders) {
-        String msg = locale.getString("messages." + key, "<red>Message not found: " + key);
+        String msg = locale.getString(key);
+        if (msg == null) {
+            return miniMessage.deserialize("<red>Message not found: " + key);
+        }
         return miniMessage.deserialize(msg, placeholders);
     }
 
