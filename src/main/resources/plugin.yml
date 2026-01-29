@@ -13,6 +13,10 @@ commands:
     description: Send feedback to developers
     usage: /feedback <subcommand>
     permission: plugin.feedback.send
+  critical:
+    description: Manage critical locations
+    usage: /critical <subcommand>
+    permission: antigrief.admin.critical
 permissions:
   ags.admin:
     description: Allows full control of AntiGriefSystem
@@ -23,3 +27,9 @@ permissions:
   plugin.feedback.history:
     description: Allow viewing feedback history
     default: true
+  antigrief.admin.critical:
+    description: Manage critical locations
+    default: op
+  antigrief.bypass.critical:
+    description: Bypass critical location protection
+    default: op

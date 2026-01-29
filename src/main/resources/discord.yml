@@ -33,3 +33,12 @@ messages:
     color: "#E67E22" # Carrot Orange
     footer: "AntiGriefSystem • Automation"
     timestamp: true
+    timestamp: true
+
+  critical-location-alert:
+    title: "🚨 ГРИФЕРСТВО ВАЖНОЙ ЗОНЫ! 🚨"
+    description: "Попытка взаимодействия в критической локации **{location}**!\n\n👤 **Игрок:** `{player}`\n📍 **Координаты:** `{coords}`\n🔨 **Действие:** `{action}`"
+    color: "#FF0000" # RED
+    footer: "AntiGriefSystem • CRITICAL ALERT"
+    content: "<@&{role_id}>" # Ping role
+    timestamp: true
