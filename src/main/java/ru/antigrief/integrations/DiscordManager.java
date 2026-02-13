@@ -42,7 +42,7 @@ public class DiscordManager {
         String description = applyPlaceholders(config.getString(path + ".description", ""), placeholders);
         String colorHex = config.getString(path + ".color", "#FFFFFF");
         String footerText = config.getString(path + ".footer", "AntiGriefSystem");
-        String content = config.getString(path + ".content", "");
+        String content = applyPlaceholders(config.getString(path + ".content", ""), placeholders); // Applied placeholders
         boolean timestamp = config.getBoolean(path + ".timestamp", true);
 
         int colorDecimal = parseColor(colorHex);

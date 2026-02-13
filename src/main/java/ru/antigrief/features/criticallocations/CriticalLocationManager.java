@@ -86,8 +86,16 @@ public class CriticalLocationManager {
         pos1Selections.put(player.getUniqueId(), player.getLocation().getBlock().getLocation());
     }
 
+    public void setPos1(Player player, Location loc) {
+        pos1Selections.put(player.getUniqueId(), loc);
+    }
+
     public void setPos2(Player player) {
         pos2Selections.put(player.getUniqueId(), player.getLocation().getBlock().getLocation());
+    }
+
+    public void setPos2(Player player, Location loc) {
+        pos2Selections.put(player.getUniqueId(), loc);
     }
 
     public Location getPos1(Player player) {
@@ -148,14 +156,29 @@ public class CriticalLocationManager {
     }
 
     public CriticalLocation getCriticalLocation(Location location) {
+        if (location == null || location.getWorld() == null) return null;
+
         synchronized (locations) {
             for (CriticalLocation loc : locations.values()) {
+                // Detailed Debug log
+                /*
+                plugin.getLogger().info(String.format("[DEBUG] Checking region '%s' in world '%s' bounds [%d,%d,%d] to [%d,%d,%d] against loc [%s, %d,%d,%d]", 
+                    loc.getName(), 
+                    loc.getWorld().getName(),
+                    loc.getMinX(), loc.getMinY(), loc.getMinZ(),
+                    loc.getMaxX(), loc.getMaxY(), loc.getMaxZ(),
+                    location.getWorld().getName(),
+                    location.getBlockX(), location.getBlockY(), location.getBlockZ()
+                ));
+                */
+                
                 if (loc.contains(location)) {
+                    // plugin.getLogger().info("[DEBUG] Location MATCHED region: " + loc.getName());
                     return loc;
                 }
             }
         }
-        return null; // Safe
+        return null;
     }
 
     public Map<String, CriticalLocation> getAllLocations() {

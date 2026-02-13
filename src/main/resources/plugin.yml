@@ -33,3 +33,6 @@ permissions:
   antigrief.bypass.critical:
     description: Bypass critical location protection
     default: op
+  ags.bypass:
+    description: Bypass item restrictions
+    default: op

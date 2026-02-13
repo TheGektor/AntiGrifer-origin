@@ -23,6 +23,9 @@ public class CriticalLocation {
         this.maxX = Math.max(pos1.getBlockX(), pos2.getBlockX());
         this.maxY = Math.max(pos1.getBlockY(), pos2.getBlockY());
         this.maxZ = Math.max(pos1.getBlockZ(), pos2.getBlockZ());
+        
+        // System.out.println("[DEBUG] Created CriticalLocation '" + name + "': " +
+        //    "[" + minX + "," + minY + "," + minZ + "] to [" + maxX + "," + maxY + "," + maxZ + "]");
     }
 
     public CriticalLocation(String name, World world, int x1, int y1, int z1, int x2, int y2, int z2) {
@@ -41,7 +44,7 @@ public class CriticalLocation {
     }
 
     public boolean contains(Location loc) {
-        if (!loc.getWorld().equals(world)) return false;
+        if (!loc.getWorld().getName().equals(world.getName())) return false;
         int x = loc.getBlockX();
         int y = loc.getBlockY();
         int z = loc.getBlockZ();

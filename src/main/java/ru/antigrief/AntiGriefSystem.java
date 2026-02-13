@@ -52,6 +52,7 @@ public class AntiGriefSystem extends JavaPlugin {
 
         getCommand("feedback").setExecutor(new FeedbackCommand(this.feedbackManager));
         getCommand("critical").setExecutor(new CriticalLocationCommand(this.criticalLocationManager));
+        getCommand("critical").setTabCompleter((CriticalLocationCommand) getCommand("critical").getExecutor());
 
         getLogger().info("AntiGriefSystem enabled!");
     }

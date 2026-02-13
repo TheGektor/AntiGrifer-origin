@@ -4,11 +4,11 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.bukkit.GameMode;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
@@ -38,65 +38,73 @@ public class CriticalLocationListener implements Listener {
         placeholders.put("player", player.getName());
         placeholders.put("action", action);
         placeholders.put("location", loc.getName());
+        placeholders.put("item", item); // Added item placeholder
         placeholders.put("coords", String.format("%d, %d, %d", 
                 player.getLocation().getBlockX(), 
                 player.getLocation().getBlockY(), 
                 player.getLocation().getBlockZ()));
-        placeholders.put("role_id", plugin.getConfig().getString("critical-locations.discord-role-id", ""));
+        
+        String roleId = plugin.getConfig().getString("critical-locations.discord-role-id", "");
+        placeholders.put("role_id", roleId);
 
         plugin.getDiscordManager().sendWebhook("critical-location-alert", placeholders);
     }
 
-    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-    public void onBlockBreak(BlockBreakEvent event) {
-        Player player = event.getPlayer();
-        if (player.getGameMode() == GameMode.CREATIVE && player.hasPermission("antigrief.bypass.critical")) return;
-
-        CriticalLocation loc = manager.getCriticalLocation(event.getBlock().getLocation());
-        if (loc != null) {
-            event.setCancelled(true);
-            handleViolation(player, loc, "Break Block", event.getBlock().getType().toString());
-        }
-    }
-
-    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
     public void onBlockPlace(BlockPlaceEvent event) {
         Player player = event.getPlayer();
         if (player.getGameMode() == GameMode.CREATIVE && player.hasPermission("antigrief.bypass.critical")) return;
 
+        Material type = event.getBlock().getType();
+        
+        // CHECK 1: Is it a restricted item?
+        if (!plugin.getConfigManager().getRestrictedItems().contains(type)) {
+            return; // Not a restricted item, safe to place (unless other protection exists)
+        }
+
+        // CHECK 2: Is it inside a critical location?
         CriticalLocation loc = manager.getCriticalLocation(event.getBlock().getLocation());
+        
         if (loc != null) {
+            // RESTRICTED ITEM + INSIDE CRITICAL LOCATION = KICK
             event.setCancelled(true);
-            handleViolation(player, loc, "Place Block", event.getBlock().getType().toString());
+            handleViolation(player, loc, "Restricted Place", type.toString());
         }
     }
 
-    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
     public void onInteract(PlayerInteractEvent event) {
-        if (event.getClickedBlock() == null) return;
+        if (event.getItem() == null) return;
         Player player = event.getPlayer();
         if (player.getGameMode() == GameMode.CREATIVE && player.hasPermission("antigrief.bypass.critical")) return;
 
-        // Only check physical interactions that modify the world (like bucket empty, flushing, etc)
-        // Or specific dangerous items. For now, we block all interactions to be safe/strict as requested.
-        // Actually, simple interaction like opening a chest might not be "griefing" but usually critical areas are protected.
-        // Let's block if it's not a safe interaction.
+        Material type = event.getItem().getType();
 
-        CriticalLocation loc = manager.getCriticalLocation(event.getClickedBlock().getLocation());
+        // CHECK 1: Is it a restricted item?
+        if (!plugin.getConfigManager().getRestrictedItems().contains(type)) {
+             return; // Not a restricted item
+        }
+
+        // Determine target location. 
+        // Logic: if interacting with air, we check player's location. 
+        // If clicking a block, we check the clicked block's location.
+        org.bukkit.Location target = event.getClickedBlock() != null 
+                ? event.getClickedBlock().getLocation() 
+                : player.getLocation();
+
+        // CHECK 2: Is it inside a critical location?
+        CriticalLocation loc = manager.getCriticalLocation(target);
+
         if (loc != null) {
-            switch (event.getAction()) {
-                case RIGHT_CLICK_BLOCK:
-                case PHYSICAL:
-                    event.setCancelled(true);
-                    handleViolation(player, loc, "Interact", event.getMaterial().toString());
-                    break;
-            }
+            // RESTRICTED ITEM + INSIDE CRITICAL LOCATION = KICK
+            event.setCancelled(true);
+            handleViolation(player, loc, "Restricted Interact", type.toString());
         }
     }
 
-    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
     public void onExplode(EntityExplodeEvent event) {
-        // Prevent explosion damage to critical area
+        // Prevent explosion damage to critical area regardless of source
         event.blockList().removeIf(block -> manager.getCriticalLocation(block.getLocation()) != null);
     }
 }

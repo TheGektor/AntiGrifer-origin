@@ -1,17 +1,22 @@
 package ru.antigrief.features.criticallocations;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 
-public class CriticalLocationCommand implements CommandExecutor {
+public class CriticalLocationCommand implements CommandExecutor, TabCompleter {
 
     private final CriticalLocationManager manager;
 
@@ -39,12 +44,10 @@ public class CriticalLocationCommand implements CommandExecutor {
 
         switch (args[0].toLowerCase()) {
             case "pos1":
-                manager.setPos1(player);
-                player.sendMessage(Component.text("Position 1 set.", NamedTextColor.GREEN));
+                setPos(player, 1);
                 break;
             case "pos2":
-                manager.setPos2(player);
-                player.sendMessage(Component.text("Position 2 set.", NamedTextColor.GREEN));
+                setPos(player, 2);
                 break;
             case "create":
                 if (args.length < 2) {
@@ -88,5 +91,56 @@ public class CriticalLocationCommand implements CommandExecutor {
         player.sendMessage(Component.text("/critical create <name> - Create location", NamedTextColor.YELLOW));
         player.sendMessage(Component.text("/critical remove <name> - Remove location", NamedTextColor.YELLOW));
         player.sendMessage(Component.text("/critical list - List locations", NamedTextColor.YELLOW));
+    }
+
+    @Override
+    public @Nullable List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String alias, @NotNull String[] args) {
+        List<String> suggestions = new ArrayList<>();
+        if (!sender.hasPermission("antigrief.admin.critical")) return suggestions;
+
+        if (args.length == 1) {
+            suggestions.add("pos1");
+            suggestions.add("pos2");
+            suggestions.add("create");
+            suggestions.add("remove");
+            suggestions.add("list");
+            return filter(suggestions, args[0]);
+        } else if (args.length == 2) {
+            String sub = args[0].toLowerCase();
+            if (sub.equals("remove")) {
+                suggestions.addAll(manager.getAllLocations().keySet());
+            } else if (sub.equals("create")) {
+                suggestions.add("<name>");
+            }
+            return filter(suggestions, args[1]);
+        }
+
+        return suggestions;
+    }
+
+    private void setPos(Player player, int posId) {
+        org.bukkit.block.Block targetBlock = player.getTargetBlockExact(5);
+        org.bukkit.Location loc;
+        
+        if (targetBlock != null && !targetBlock.getType().isAir()) {
+            loc = targetBlock.getLocation();
+        } else {
+            loc = player.getLocation().getBlock().getLocation();
+        }
+
+        if (posId == 1) {
+            manager.setPos1(player, loc);
+            player.sendMessage(Component.text("Position 1 set to " + 
+                loc.getBlockX() + ", " + loc.getBlockY() + ", " + loc.getBlockZ(), NamedTextColor.GREEN));
+        } else {
+            manager.setPos2(player, loc);
+            player.sendMessage(Component.text("Position 2 set to " + 
+                loc.getBlockX() + ", " + loc.getBlockY() + ", " + loc.getBlockZ(), NamedTextColor.GREEN));
+        }
+    }
+
+    private List<String> filter(List<String> list, String partial) {
+        String p = partial.toLowerCase();
+        return list.stream().filter(s -> s.toLowerCase().startsWith(p)).collect(Collectors.toList());
     }
 }
