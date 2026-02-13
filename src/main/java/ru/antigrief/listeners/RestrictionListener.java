@@ -8,6 +8,8 @@ import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.inventory.CraftItemEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
+
+import net.kyori.adventure.text.Component;
 import ru.antigrief.AntiGriefSystem;
 import ru.antigrief.data.PlayerData;
 import ru.antigrief.features.alerts.AlertManager;
@@ -41,7 +43,7 @@ public class RestrictionListener implements Listener {
         return false;
     }
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public void onInteract(PlayerInteractEvent event) {
         // Check item in hand usage
         if (event.getItem() != null) {
@@ -61,7 +63,7 @@ public class RestrictionListener implements Listener {
         }
     }
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public void onPlace(BlockPlaceEvent event) {
         Material mat = event.getBlock().getType();
         if (checkRestriction(event.getPlayer(), mat, "установка")) {
@@ -69,7 +71,7 @@ public class RestrictionListener implements Listener {
         }
     }
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public void onCraft(CraftItemEvent event) {
         if (event.getWhoClicked() instanceof Player) {
             Player player = (Player) event.getWhoClicked();
@@ -82,7 +84,7 @@ public class RestrictionListener implements Listener {
         }
     }
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public void onDispense(org.bukkit.event.block.BlockDispenseEvent event) {
         if (event.getItem() == null)
             return;

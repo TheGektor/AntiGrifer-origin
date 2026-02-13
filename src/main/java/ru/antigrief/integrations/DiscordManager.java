@@ -1,8 +1,5 @@
 package ru.antigrief.integrations;
 
-import ru.antigrief.AntiGriefSystem;
-import org.bukkit.configuration.file.YamlConfiguration;
-
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -10,6 +7,10 @@ import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Map;
+
+import org.bukkit.configuration.file.YamlConfiguration;
+
+import ru.antigrief.AntiGriefSystem;
 
 public class DiscordManager {
 
@@ -41,11 +42,12 @@ public class DiscordManager {
         String description = applyPlaceholders(config.getString(path + ".description", ""), placeholders);
         String colorHex = config.getString(path + ".color", "#FFFFFF");
         String footerText = config.getString(path + ".footer", "AntiGriefSystem");
+        String content = applyPlaceholders(config.getString(path + ".content", ""), placeholders); // Applied placeholders
         boolean timestamp = config.getBoolean(path + ".timestamp", true);
 
         int colorDecimal = parseColor(colorHex);
 
-        String json = buildJson(title, description, colorDecimal, footerText, timestamp);
+        String json = buildJson(title, description, colorDecimal, footerText, timestamp, content);
 
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(webhookUrl))
@@ -89,10 +91,11 @@ public class DiscordManager {
         }
     }
 
-    private String buildJson(String title, String description, int color, String footer, boolean timestamp) {
+    private String buildJson(String title, String description, int color, String footer, boolean timestamp, String content) {
         String safeTitle = escapeJson(title);
         String safeDesc = escapeJson(description);
         String safeFooter = escapeJson(footer);
+        String safeContent = escapeJson(content);
 
         String timestampJson = "";
         if (timestamp) {
@@ -101,6 +104,7 @@ public class DiscordManager {
 
         return String.format(
                 "{" +
+                        "  \"content\": \"%s\"," +
                         "  \"embeds\": [{" +
                         "    \"title\": \"%s\"," +
                         "    \"description\": \"%s\"," +
@@ -109,7 +113,7 @@ public class DiscordManager {
                         "%s" +
                         "  }]" +
                         "}",
-                safeTitle, safeDesc, color, safeFooter, timestampJson);
+                safeContent, safeTitle, safeDesc, color, safeFooter, timestampJson);
     }
 
     private String escapeJson(String text) {
