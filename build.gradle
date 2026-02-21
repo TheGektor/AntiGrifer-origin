@@ -28,6 +28,7 @@ dependencies {
     implementation "net.kyori:adventure-text-minimessage:4.17.0"
     implementation 'org.xerial:sqlite-jdbc:3.45.1.0'
     implementation 'com.zaxxer:HikariCP:5.1.0'
+    implementation 'org.bstats:bstats-bukkit:3.1.0'
 }
 
 def targetJavaVersion = 21
@@ -55,4 +56,8 @@ processResources {
     filesMatching('plugin.yml') {
         expand props
     }
+}
+
+tasks.shadowJar {
+    relocate 'org.bstats', 'ru.antigrief.metrics'
 }

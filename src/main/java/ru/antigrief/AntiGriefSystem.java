@@ -76,6 +76,10 @@ public class AntiGriefSystem extends JavaPlugin {
         getServer().getPluginManager().registerEvents(playerHandler, this);
         getServer().getPluginManager().registerEvents(new RestrictionListener(this), this);
 
+        // Initialize bStats
+        int pluginId = 24869; // TODO: Replace with your own plugin ID from bStats.org
+        new org.bstats.bukkit.Metrics(this, pluginId);
+
         getLogger().info("AntiGriefSystem enabled!");
     }
 
