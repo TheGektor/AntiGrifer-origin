@@ -40,7 +40,13 @@ public class AntiGriefSystem extends JavaPlugin {
         this.localeManager = new LocaleManager(this);
         this.localeManager.loadLocale();
 
+        // Connect to DB
         this.databaseManager = new DatabaseManager(this);
+        if (!this.databaseManager.initialize()) {
+            getLogger().severe("Could not initialize database! Disabling plugin...");
+            getServer().getPluginManager().disablePlugin(this);
+            return;
+        }
         
         // Initialize other managers
         this.discordManager = new DiscordManager(this);
@@ -48,21 +54,13 @@ public class AntiGriefSystem extends JavaPlugin {
         this.feedbackManager = new FeedbackManager(this);
         this.criticalLocationManager = new CriticalLocationManager(this, databaseManager);
 
-        // Connect to DB
-        databaseManager = new DatabaseManager(this);
-        if (!databaseManager.initialize()) {
-            getLogger().severe("Could not initialize database! Disabling plugin...");
-            getServer().getPluginManager().disablePlugin(this);
-            return;
-        }
+        // Handlers are initialized in constructor/fields above, but ensuring consistency
+        if (playerHandler == null) playerHandler = new PlayerHandler(this);
 
         // Listeners
         getServer().getPluginManager().registerEvents(playerHandler, this);
         getServer().getPluginManager().registerEvents(new RestrictionListener(this), this);
         getServer().getPluginManager().registerEvents(new CriticalLocationListener(this, criticalLocationManager), this);
-
-        // Handlers are initialized in constructor/fields above, but ensuring consistency
-        if (playerHandler == null) playerHandler = new PlayerHandler(this);
 
         // Commands
         getCommand("ags").setExecutor(new CommandManager(this));

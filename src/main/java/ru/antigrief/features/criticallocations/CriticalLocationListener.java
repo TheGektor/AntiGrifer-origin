@@ -9,6 +9,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
@@ -38,7 +39,7 @@ public class CriticalLocationListener implements Listener {
         placeholders.put("player", player.getName());
         placeholders.put("action", action);
         placeholders.put("location", loc.getName());
-        placeholders.put("item", item); // Added item placeholder
+        placeholders.put("item", item);
         placeholders.put("coords", String.format("%d, %d, %d", 
                 player.getLocation().getBlockX(), 
                 player.getLocation().getBlockY(), 
@@ -53,22 +54,50 @@ public class CriticalLocationListener implements Listener {
     @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
     public void onBlockPlace(BlockPlaceEvent event) {
         Player player = event.getPlayer();
+
+        // Standard place restriction check
         if (player.getGameMode() == GameMode.CREATIVE && player.hasPermission("antigrief.bypass.critical")) return;
 
         Material type = event.getBlock().getType();
         
-        // CHECK 1: Is it a restricted item?
         if (!plugin.getConfigManager().getRestrictedItems().contains(type)) {
-            return; // Not a restricted item, safe to place (unless other protection exists)
+            return; 
         }
 
-        // CHECK 2: Is it inside a critical location?
         CriticalLocation loc = manager.getCriticalLocation(event.getBlock().getLocation());
         
         if (loc != null) {
-            // RESTRICTED ITEM + INSIDE CRITICAL LOCATION = KICK
+            if (manager.isPlayerTrusted(loc.getName(), player.getUniqueId())) {
+                return; // Player is trusted in this specific region!
+            }
+            
             event.setCancelled(true);
             handleViolation(player, loc, "Restricted Place", type.toString());
+        }
+    }
+    
+    @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
+    public void onBlockBreak(BlockBreakEvent event) {
+        Player player = event.getPlayer();
+        org.bukkit.Location target = event.getBlock().getLocation();
+
+        // Standard break restriction check
+        if (player.getGameMode() == GameMode.CREATIVE && player.hasPermission("antigrief.bypass.critical")) return;
+        Material type = event.getBlock().getType();
+
+        if (!plugin.getConfigManager().getRestrictedItems().contains(type)) {
+            return;
+        }
+
+        CriticalLocation loc = manager.getCriticalLocation(target);
+
+        if (loc != null) {
+            if (manager.isPlayerTrusted(loc.getName(), player.getUniqueId())) {
+                return; // Player is trusted in this specific region!
+            }
+            
+            event.setCancelled(true);
+            handleViolation(player, loc, "Restricted Break", type.toString());
         }
     }
 
@@ -80,23 +109,21 @@ public class CriticalLocationListener implements Listener {
 
         Material type = event.getItem().getType();
 
-        // CHECK 1: Is it a restricted item?
         if (!plugin.getConfigManager().getRestrictedItems().contains(type)) {
-             return; // Not a restricted item
+             return; 
         }
 
-        // Determine target location. 
-        // Logic: if interacting with air, we check player's location. 
-        // If clicking a block, we check the clicked block's location.
         org.bukkit.Location target = event.getClickedBlock() != null 
                 ? event.getClickedBlock().getLocation() 
                 : player.getLocation();
 
-        // CHECK 2: Is it inside a critical location?
         CriticalLocation loc = manager.getCriticalLocation(target);
 
         if (loc != null) {
-            // RESTRICTED ITEM + INSIDE CRITICAL LOCATION = KICK
+            if (manager.isPlayerTrusted(loc.getName(), player.getUniqueId())) {
+                return; // Player is trusted in this specific region!
+            }
+            
             event.setCancelled(true);
             handleViolation(player, loc, "Restricted Interact", type.toString());
         }
@@ -104,7 +131,6 @@ public class CriticalLocationListener implements Listener {
 
     @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
     public void onExplode(EntityExplodeEvent event) {
-        // Prevent explosion damage to critical area regardless of source
         event.blockList().removeIf(block -> manager.getCriticalLocation(block.getLocation()) != null);
     }
 }

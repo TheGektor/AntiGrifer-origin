@@ -1,18 +1,21 @@
 package ru.antigrief.data;
 
-import ru.antigrief.AntiGriefSystem;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.UUID;
 import java.util.logging.Level;
 
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
+
+import ru.antigrief.AntiGriefSystem;
+
 public class DatabaseManager {
 
     private final AntiGriefSystem plugin;
-    private Connection connection;
+    private HikariDataSource dataSource;
 
     public DatabaseManager(AntiGriefSystem plugin) {
         this.plugin = plugin;
@@ -28,53 +31,51 @@ public class DatabaseManager {
                 }
             }
 
-            // Drivers are loaded automatically via libraries in plugin.yml
             String dbPath = new java.io.File(plugin.getDataFolder(), "database.db").getAbsolutePath();
-            connection = DriverManager.getConnection("jdbc:sqlite:" + dbPath);
+            
+            HikariConfig config = new HikariConfig();
+            config.setJdbcUrl("jdbc:sqlite:" + dbPath);
+            config.setDriverClassName("org.sqlite.JDBC");
+            
+            // SQLite specific configurations for Hikari
+            config.setPoolName("AntiGriefSystemPool");
+            config.setMaximumPoolSize(10);
+            config.setConnectionTimeout(30000);
+            config.setIdleTimeout(600000);
+            config.setMaxLifetime(1800000);
+            
+            dataSource = new HikariDataSource(config);
+            
             createTables();
-            plugin.getLogger().info("Database connected successfully.");
+            plugin.getLogger().info("Database connected successfully using HikariCP.");
             return true;
-        } catch (SQLException e) {
-            plugin.getLogger().log(Level.SEVERE, "Database connection failed (SQLException)", e);
-            return false;
         } catch (Exception e) {
-            plugin.getLogger().log(Level.SEVERE, "Database connection failed (General)", e);
+            plugin.getLogger().log(Level.SEVERE, "Database connection failed", e);
             return false;
         }
     }
 
     private void createTables() {
-        try (PreparedStatement ps = connection.prepareStatement(
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(
                 "CREATE TABLE IF NOT EXISTS players (uuid VARCHAR(36) PRIMARY KEY, trusted BOOLEAN, playtime LONG)")) {
             ps.executeUpdate();
         } catch (SQLException e) {
-            plugin.getLogger().warning("Failed to create tables: " + e.getMessage());
+            plugin.getLogger().log(Level.WARNING, "Failed to create tables", e);
         }
     }
 
     public void closeConnection() {
-        try {
-            if (connection != null && !connection.isClosed()) {
-                connection.close();
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void ensureConnection() throws SQLException {
-        if (connection == null || connection.isClosed()) {
-            String dbPath = new java.io.File(plugin.getDataFolder(), "database.db").getAbsolutePath();
-            connection = DriverManager.getConnection("jdbc:sqlite:" + dbPath);
+        if (dataSource != null && !dataSource.isClosed()) {
+            dataSource.close();
         }
     }
 
     public PlayerData loadPlayer(UUID uuid) {
-        try {
-            ensureConnection();
-            try (PreparedStatement ps = connection.prepareStatement("SELECT * FROM players WHERE uuid = ?")) {
-                ps.setString(1, uuid.toString());
-                ResultSet rs = ps.executeQuery();
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement("SELECT * FROM players WHERE uuid = ?")) {
+            ps.setString(1, uuid.toString());
+            try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     return new PlayerData(
                             UUID.fromString(rs.getString("uuid")),
@@ -83,28 +84,29 @@ public class DatabaseManager {
                 }
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            plugin.getLogger().log(Level.SEVERE, "Failed to load player data for UUID: " + uuid, e);
         }
         // Return default data if not found or error
         return new PlayerData(uuid, 0, false);
     }
 
     public void savePlayer(PlayerData data) {
-         try {
-            ensureConnection();
-            try (PreparedStatement ps = connection.prepareStatement(
-                    "INSERT OR REPLACE INTO players (uuid, trusted, playtime) VALUES (?, ?, ?)")) {
-                ps.setString(1, data.getUuid().toString());
-                ps.setBoolean(2, data.isTrusted());
-                ps.setLong(3, data.getPlaytime());
-                ps.executeUpdate();
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+         try (Connection conn = getConnection();
+              PreparedStatement ps = conn.prepareStatement(
+                 "INSERT OR REPLACE INTO players (uuid, trusted, playtime) VALUES (?, ?, ?)")) {
+             ps.setString(1, data.getUuid().toString());
+             ps.setBoolean(2, data.isTrusted());
+             ps.setLong(3, data.getPlaytime());
+             ps.executeUpdate();
+         } catch (SQLException e) {
+             plugin.getLogger().log(Level.SEVERE, "Failed to save player data for UUID: " + data.getUuid(), e);
+         }
     }
     
-    public Connection getConnection() {
-        return connection;
+    public Connection getConnection() throws SQLException {
+        if (dataSource == null || dataSource.isClosed()) {
+            throw new SQLException("HikariDataSource is null or closed");
+        }
+        return dataSource.getConnection();
     }
 }

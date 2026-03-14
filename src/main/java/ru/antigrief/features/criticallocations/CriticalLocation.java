@@ -1,5 +1,7 @@
 package ru.antigrief.features.criticallocations;
 
+import java.util.Set;
+
 import org.bukkit.Location;
 import org.bukkit.World;
 
@@ -7,58 +9,75 @@ public class CriticalLocation {
 
     private final String name;
     private final World world;
-    private final int minX;
-    private final int minY;
-    private final int minZ;
-    private final int maxX;
-    private final int maxY;
-    private final int maxZ;
+    
+    // Store X and Z coordinates packed into a long: (x & 0xFFFFFFFFL) | ((z & 0xFFFFFFFFL) << 32)
+    private final Set<Long> coordinates;
+    
+    // Bounding box for fast rejection before checking Set
+    private final int minX, minZ, maxX, maxZ;
 
-    public CriticalLocation(String name, Location pos1, Location pos2) {
-        this.name = name;
-        this.world = pos1.getWorld();
-        this.minX = Math.min(pos1.getBlockX(), pos2.getBlockX());
-        this.minY = Math.min(pos1.getBlockY(), pos2.getBlockY());
-        this.minZ = Math.min(pos1.getBlockZ(), pos2.getBlockZ());
-        this.maxX = Math.max(pos1.getBlockX(), pos2.getBlockX());
-        this.maxY = Math.max(pos1.getBlockY(), pos2.getBlockY());
-        this.maxZ = Math.max(pos1.getBlockZ(), pos2.getBlockZ());
-        
-        // System.out.println("[DEBUG] Created CriticalLocation '" + name + "': " +
-        //    "[" + minX + "," + minY + "," + minZ + "] to [" + maxX + "," + maxY + "," + maxZ + "]");
-    }
-
-    public CriticalLocation(String name, World world, int x1, int y1, int z1, int x2, int y2, int z2) {
+    public CriticalLocation(String name, World world, Set<Long> coordinates) {
         this.name = name;
         this.world = world;
-        this.minX = Math.min(x1, x2);
-        this.minY = Math.min(y1, y2);
-        this.minZ = Math.min(z1, z2);
-        this.maxX = Math.max(x1, x2);
-        this.maxY = Math.max(y1, y2);
-        this.maxZ = Math.max(z1, z2);
+        this.coordinates = coordinates;
+        
+        int tempMinX = Integer.MAX_VALUE;
+        int tempMinZ = Integer.MAX_VALUE;
+        int tempMaxX = Integer.MIN_VALUE;
+        int tempMaxZ = Integer.MIN_VALUE;
+        
+        for (long packed : coordinates) {
+            int x = getX(packed);
+            int z = getZ(packed);
+            if (x < tempMinX) tempMinX = x;
+            if (x > tempMaxX) tempMaxX = x;
+            if (z < tempMinZ) tempMinZ = z;
+            if (z > tempMaxZ) tempMaxZ = z;
+        }
+        
+        this.minX = tempMinX;
+        this.minZ = tempMinZ;
+        this.maxX = tempMaxX;
+        this.maxZ = tempMaxZ;
     }
 
     public String getName() {
         return name;
     }
 
+    public World getWorld() { 
+        return world; 
+    }
+    
+    public Set<Long> getCoordinates() {
+        return coordinates;
+    }
+
     public boolean contains(Location loc) {
+        if (world == null || loc.getWorld() == null) return false;
         if (!loc.getWorld().getName().equals(world.getName())) return false;
+        
         int x = loc.getBlockX();
-        int y = loc.getBlockY();
         int z = loc.getBlockZ();
-        return x >= minX && x <= maxX && y >= minY && y <= maxY && z >= minZ && z <= maxZ;
+        
+        // Fast rejection
+        if (x < minX || x > maxX || z < minZ || z > maxZ) {
+            return false;
+        }
+        
+        return coordinates.contains(packXYZ(x, z));
     }
-
-    public World getWorld() {
-        return world;
+    
+    // Helpers
+    public static long packXYZ(int x, int z) {
+        return (x & 0xFFFFFFFFL) | ((z & 0xFFFFFFFFL) << 32);
     }
-
-    public int getMinX() { return minX; }
-    public int getMinY() { return minY; }
-    public int getMinZ() { return minZ; }
-    public int getMaxX() { return maxX; }
-    public int getMaxY() { return maxY; }
-    public int getMaxZ() { return maxZ; }
+    
+    public static int getX(long packed) {
+        return (int) (packed & 0xFFFFFFFFL);
+    }
+    
+    public static int getZ(long packed) {
+        return (int) (packed >>> 32);
+    }
 }
