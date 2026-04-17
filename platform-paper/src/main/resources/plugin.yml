@@ -1,0 +1,9 @@
+name: AntiGriefSystem
+version: '${version}'
+main: ru.antigrief.paper.AntiGriferPaperPlugin
+api-version: '1.21'
+description: AntiGrifer v3 - Anti-griefing plugin
+commands:
+  antigrifer:
+    description: Main command for AntiGrifer
+    permission: antigrifer.admin

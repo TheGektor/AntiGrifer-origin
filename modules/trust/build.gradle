@@ -1,0 +1,5 @@
+dependencies {
+    implementation project(':api')
+    implementation project(':common')
+    compileOnly project(':core')
+}

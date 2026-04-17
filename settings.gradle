@@ -1,1 +1,8 @@
-rootProject.name = 'AntiGriefSystem'
+rootProject.name = 'antigrifer'
+
+include 'api'
+include 'common'
+include 'core'
+include 'platform-paper'
+include 'modules:trust'
+include 'modules:detection'
