@@ -1,0 +1,60 @@
+# AntiGrifer Configuration
+
+trust:
+  # Время игры в минутах для достижения уровней доверия
+  tier1_minutes: 60
+  tier2_minutes: 120
+  tier3_minutes: 240
+
+  # Предметы, доступные с Уровня 1 (Огнеопасно)
+  fire_materials:
+    - FLINT_AND_STEEL
+    - FIRE_CHARGE
+    - LAVA_BUCKET
+
+  # Предметы, доступные с Уровня 2 (Взрывоопасно)
+  explosive_materials:
+    - TNT
+    - END_CRYSTAL
+    - TNT_MINECART
+
+  # Блоки, взаимодействие с которыми требует Уровня 3 (Редстоун)
+  redstone_materials:
+    - LEVER
+    - STONE_BUTTON
+    - OAK_BUTTON
+    - SPRUCE_BUTTON
+    - BIRCH_BUTTON
+    - JUNGLE_BUTTON
+    - ACACIA_BUTTON
+    - DARK_OAK_BUTTON
+    - MANGROVE_BUTTON
+    - CHERRY_BUTTON
+    - BAMBOO_BUTTON
+    - CRIMSON_BUTTON
+    - WARPED_BUTTON
+    - STONE_PRESSURE_PLATE
+    - OAK_PRESSURE_PLATE
+    - SPRUCE_PRESSURE_PLATE
+    - BIRCH_PRESSURE_PLATE
+    - JUNGLE_PRESSURE_PLATE
+    - ACACIA_PRESSURE_PLATE
+    - DARK_OAK_PRESSURE_PLATE
+    - MANGROVE_PRESSURE_PLATE
+    - CHERRY_PRESSURE_PLATE
+    - BAMBOO_PRESSURE_PLATE
+    - CRIMSON_PRESSURE_PLATE
+    - WARPED_PRESSURE_PLATE
+    - LIGHT_WEIGHTED_PRESSURE_PLATE
+    - HEAVY_WEIGHTED_PRESSURE_PLATE
+    - DISPENSER
+    - DROPPER
+    - TNT
+
+messages:
+  no_permission_fire: "&cУ вас недостаточно доверия для использования огнеопасных предметов! (Нужно 60 мин игры)"
+  no_permission_explosive: "&cУ вас недостаточно доверия для использования взрывчатки! (Нужно 120 мин игры)"
+  no_permission_redstone: "&cУ вас недостаточно доверия для взаимодействия с этими механизмами! (Нужно 240 мин игры)"
+  admin_alert: "&6[AntiGrifer] &eПодозрение на гриф: &f%player% &7(%reason%)"
+  admin_tp_button: "&b[ТЕЛЕПОРТ]"
+  admin_tp_hover: "&fНажмите, чтобы телепортироваться к %player%"
