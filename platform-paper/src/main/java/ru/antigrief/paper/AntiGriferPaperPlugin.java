@@ -37,7 +37,7 @@ public class AntiGriferPaperPlugin extends JavaPlugin {
         SimulationEngine simulationEngine = new SimulationEngine();
         RateLimitEngine rateLimitEngine = new RateLimitEngine();
         RuleEngine ruleEngine = new RuleEngine();
-        
+
         moduleManager = new ModuleManager(getLogger());
         pipeline = new ActionPipeline(
             contextManager, detectionEngine, patternEngine, behaviorEngine,
@@ -46,7 +46,7 @@ public class AntiGriferPaperPlugin extends JavaPlugin {
         );
 
         // Default rules/limits
-        rateLimitEngine.registerLimit(ru.antigrief.common.action.ActionType.BLOCK_PLACE, 10, 1000); // 10 bps
+        rateLimitEngine.registerLimit(ru.antigrief.common.action.ActionType.BLOCK_PLACE, 10, 1000);
 
         // Register bundled modules
         moduleManager.registerModule(new TrustModule(behaviorEngine));
@@ -58,8 +58,15 @@ public class AntiGriferPaperPlugin extends JavaPlugin {
         // Register adapter
         getServer().getPluginManager().registerEvents(new PaperAdapter(pipeline), this);
 
-        // Register commands
-        getCommand("antigrifer").setExecutor(new AntiGriferCommand(debugService, contextManager));
+        // Register command with tab completer
+        AntiGriferCommand cmd = new AntiGriferCommand(
+            debugService, contextManager, metricsEngine, moduleManager, replayEngine
+        );
+        var pluginCommand = getCommand("antigrifer");
+        if (pluginCommand != null) {
+            pluginCommand.setExecutor(cmd);
+            pluginCommand.setTabCompleter(cmd);
+        }
 
         getLogger().info("AntiGrifer v3 successfully loaded!");
     }

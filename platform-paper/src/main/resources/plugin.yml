@@ -5,5 +5,9 @@ api-version: '1.21'
 description: AntiGrifer v3 - Anti-griefing plugin
 commands:
   antigrifer:
-    description: Main command for AntiGrifer
+    description: Главная команда AntiGrifer
+    usage: /antigrifer <help|debug|module|metrics|replay|reload>
     permission: antigrifer.admin
+    aliases:
+      - ags
+      - ag

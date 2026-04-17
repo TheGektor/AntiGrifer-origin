@@ -1,5 +1,7 @@
 package ru.antigrief.core.module;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
@@ -38,5 +40,28 @@ public class ModuleManager {
                 logger.severe("Failed to disable module: " + module.getName());
             }
         }
+    }
+
+    /** Hotreload a single module by name. */
+    public void reloadModule(String name) {
+        AGModule module = modules.get(name);
+        if (module == null) {
+            logger.warning("Module not found for reload: " + name);
+            return;
+        }
+        try {
+            module.onDisable();
+            module.onLoad();
+            module.onEnable();
+            logger.info("Reloaded module: " + name);
+        } catch (Exception e) {
+            logger.severe("Failed to reload module: " + name);
+            e.printStackTrace();
+        }
+    }
+
+    /** Returns names of all registered modules (for tab completion). */
+    public List<String> getModuleNames() {
+        return new ArrayList<>(modules.keySet());
     }
 }
