@@ -18,4 +18,11 @@ public interface PlayerContext {
     void addFlag(String flag);
     void removeFlag(String flag);
     List<ActionInfo> getRecentActions();
+
+    /**
+     * Возвращает вручную установленный уровень доверия (0–3).
+     * null — уровень определяется автоматически по плейтайму.
+     */
+    Integer getManualTier();
+    void setManualTier(Integer tier);
 }

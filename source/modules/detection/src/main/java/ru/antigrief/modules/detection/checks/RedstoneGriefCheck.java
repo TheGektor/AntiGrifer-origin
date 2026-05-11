@@ -34,7 +34,7 @@ public class RedstoneGriefCheck implements Check {
     @Override
     public CheckResult check(PlayerContext context, ActionInfo action) {
         if (action.getType() == ActionType.REDSTONE_INTERACT) {
-            TrustTier tier = TrustTier.fromPlaytime(context.getPlaytimeSeconds(), trustConfig);
+            TrustTier tier = TrustTier.resolve(context, trustConfig);
             
             if (tier.getLevel() < TrustTier.TIER_3.getLevel()) {
                 // Check if the material is in the restricted list for Tier 3

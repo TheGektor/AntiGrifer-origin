@@ -4,7 +4,7 @@ plugins {
 }
 
 dependencies {
-    compileOnly "io.papermc.paper:paper-api:1.21.1-R0.1-SNAPSHOT"
+    compileOnly "io.papermc.paper:paper-api:1.21.11-R0.1-SNAPSHOT"
     implementation project(':api')
     implementation project(':common')
     implementation project(':core')
@@ -13,7 +13,7 @@ dependencies {
 }
 
 tasks.runServer {
-    minecraftVersion("1.21.1")
+    minecraftVersion("1.21.11")
 }
 
 processResources {

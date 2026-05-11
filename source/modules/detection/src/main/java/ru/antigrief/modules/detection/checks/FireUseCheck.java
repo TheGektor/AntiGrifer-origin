@@ -34,7 +34,7 @@ public class FireUseCheck implements Check {
     @Override
     public CheckResult check(PlayerContext context, ActionInfo action) {
         if (action.getType() == ActionType.FIRE_USE) {
-            TrustTier tier = TrustTier.fromPlaytime(context.getPlaytimeSeconds(), trustConfig);
+            TrustTier tier = TrustTier.resolve(context, trustConfig);
             
             if (tier.getLevel() < TrustTier.TIER_1.getLevel()) {
                 String msg = config.getString("messages.no_permission_fire", "&cУ вас недостаточно доверия для использования огнеопасных предметов! (Нужно 60 мин игры)");

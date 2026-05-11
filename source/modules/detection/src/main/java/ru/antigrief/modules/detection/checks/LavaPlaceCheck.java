@@ -35,7 +35,7 @@ public class LavaPlaceCheck implements Check {
     public CheckResult check(PlayerContext context, ActionInfo action) {
         if (action.getType() == ActionType.BLOCK_PLACE && action.getTargetBlockOrEntity() != null) {
             if (action.getTargetBlockOrEntity().contains("LAVA")) {
-                TrustTier tier = TrustTier.fromPlaytime(context.getPlaytimeSeconds(), trustConfig);
+                TrustTier tier = TrustTier.resolve(context, trustConfig);
                 if (tier.getLevel() < TrustTier.TIER_1.getLevel()) {
                     String msg = config.getString("messages.no_permission_lava",
                             "&cУ вас недостаточно доверия для размещения лавы! (Нужно 60 мин игры)");

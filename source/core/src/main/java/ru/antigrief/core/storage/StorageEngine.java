@@ -3,10 +3,16 @@ package ru.antigrief.core.storage;
 import ru.antigrief.api.PlayerContext;
 
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
 
 public interface StorageEngine {
-    CompletableFuture<Void> savePlayer(PlayerContext context);
-    CompletableFuture<PlayerContext> loadPlayer(UUID uuid);
+    /** Синхронно сохраняет данные игрока. */
+    void savePlayer(PlayerContext context);
+
+    /** Синхронно загружает данные игрока. Возвращает новый контекст если не найден. */
+    PlayerContext loadPlayer(UUID uuid);
+
+    /** Сохраняет всех игроков (вызывается при onDisable). */
+    void saveAll(Iterable<PlayerContext> contexts);
+
     void close();
 }

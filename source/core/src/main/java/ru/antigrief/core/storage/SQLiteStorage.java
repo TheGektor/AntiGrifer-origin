@@ -4,29 +4,27 @@ import ru.antigrief.api.PlayerContext;
 import ru.antigrief.core.context.PlayerContextImpl;
 
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
 
+/**
+ * Заглушка SQLite. Реальное хранилище — YamlPlayerStorage в platform-paper.
+ */
 public class SQLiteStorage implements StorageEngine {
-    // Simple mock implementation as actual JDBC setup takes time and requires external lib in core
-    // In a real scenario, this would use HikariCP and SQLite JDBC.
-    
+
     @Override
-    public CompletableFuture<Void> savePlayer(PlayerContext context) {
-        return CompletableFuture.runAsync(() -> {
-            // Simulated save logic
-        });
+    public void savePlayer(PlayerContext context) {
+        // stub — данные не персистируются
     }
 
     @Override
-    public CompletableFuture<PlayerContext> loadPlayer(UUID uuid) {
-        return CompletableFuture.supplyAsync(() -> {
-            // Simulated load logic
-            return new PlayerContextImpl(uuid);
-        });
+    public PlayerContext loadPlayer(UUID uuid) {
+        return new PlayerContextImpl(uuid);
     }
 
     @Override
-    public void close() {
-        // Close connection pool
+    public void saveAll(Iterable<PlayerContext> contexts) {
+        // stub
     }
+
+    @Override
+    public void close() { }
 }

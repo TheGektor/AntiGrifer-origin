@@ -11,6 +11,7 @@ public class PlayerContextImpl implements PlayerContext {
     private long playtimeSeconds;
     private int trustScore;
     private int violationScore;
+    private Integer manualTier = null;
     private final List<String> flags = new ArrayList<>();
     private final List<ActionInfo> recentActions = new ArrayList<>();
     private long firstSeenTimestamp;
@@ -23,19 +24,23 @@ public class PlayerContextImpl implements PlayerContext {
     @Override public UUID getUniqueId() { return uuid; }
     @Override public long getPlaytimeSeconds() { return playtimeSeconds; }
     @Override public void addPlaytime(long seconds) { this.playtimeSeconds += seconds; }
-    
+
     @Override public long getFirstSeenTimestamp() { return firstSeenTimestamp; }
     @Override public void setFirstSeenTimestamp(long timestamp) { this.firstSeenTimestamp = timestamp; }
-    
+
     @Override public int getTrustScore() { return trustScore; }
     @Override public void setTrustScore(int score) { this.trustScore = score; }
-    
+
     @Override public int getViolationScore() { return violationScore; }
     @Override public void setViolationScore(int score) { this.violationScore = score; }
-    
+
     @Override public List<String> getFlags() { return flags; }
     @Override public void addFlag(String flag) { if (!flags.contains(flag)) flags.add(flag); }
     @Override public void removeFlag(String flag) { flags.remove(flag); }
-    
+
     @Override public List<ActionInfo> getRecentActions() { return recentActions; }
+
+    @Override public Integer getManualTier() { return manualTier; }
+    @Override public void setManualTier(Integer tier) { this.manualTier = tier; }
 }
+
