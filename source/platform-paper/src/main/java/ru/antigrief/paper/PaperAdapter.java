@@ -8,7 +8,7 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockIgniteEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
-import org.bukkit.event.entity.EntityChangeBlockEvent;
+
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
@@ -33,7 +33,8 @@ public class PaperAdapter implements Listener {
     }
 
     private PlatformLocation toPlatformLocation(org.bukkit.Location loc) {
-        return new PlatformLocation(loc.getWorld().getName(), loc.getX(), loc.getY(), loc.getZ());
+        String worldName = (loc.getWorld() != null) ? loc.getWorld().getName() : "unknown";
+        return new PlatformLocation(worldName, loc.getX(), loc.getY(), loc.getZ());
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
@@ -73,7 +74,9 @@ public class PaperAdapter implements Listener {
         CheckResult result = pipeline.process(info);
         if (result.isCancelAction()) {
             event.setCancelled(true);
-            event.getPlayer().sendMessage("§c" + result.getMessage());
+            if (result.getMessage() != null) {
+                event.getPlayer().sendMessage("\u00a7c" + result.getMessage());
+            }
         }
     }
 
@@ -89,7 +92,7 @@ public class PaperAdapter implements Listener {
         pipeline.process(info);
     }
 
-    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.MONITOR)
     public void onPlayerQuit(PlayerQuitEvent event) {
         ActionInfo info = new ActionInfo(
             toPlatformPlayer(event.getPlayer()),

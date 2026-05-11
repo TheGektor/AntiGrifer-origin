@@ -29,10 +29,10 @@ public class ReplayEngine {
         if (!activeSessions.contains(action.getPlayer().getUuid())) {
             return;
         }
-        recordings.computeIfAbsent(action.getPlayer().getUuid(), k -> new ArrayList<>()).add(action);
-        recordings.computeIfAbsent(action.getPlayer().getUuid(), k -> new ArrayList<>()).add(action);
+        // Get-or-create the recording list and add the action once
+        List<ActionInfo> history = recordings.computeIfAbsent(action.getPlayer().getUuid(), k -> new ArrayList<>());
+        history.add(action);
         // Limit replay size per player
-        List<ActionInfo> history = recordings.get(action.getPlayer().getUuid());
         if (history.size() > 1000) {
             history.remove(0);
         }

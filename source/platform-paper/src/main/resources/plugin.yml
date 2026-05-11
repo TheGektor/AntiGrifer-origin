@@ -2,12 +2,23 @@ name: AntiGriefSystem
 version: '${version}'
 main: ru.antigrief.paper.AntiGriferPaperPlugin
 api-version: '1.21'
-description: AntiGrifer v3 - Anti-griefing plugin
+description: AntiGrifer v3 - Anti-griefing plugin with trust system
+authors: [Antag0nis1]
+folia-supported: false
+
 commands:
   antigrifer:
-    description: Главная команда AntiGrifer
+    description: Main command for AntiGrifer plugin
     usage: /antigrifer <help|debug|module|metrics|replay|reload>
     permission: antigrifer.admin
     aliases:
       - ags
       - ag
+
+permissions:
+  antigrifer.admin:
+    description: Full access to AntiGrifer admin commands
+    default: op
+  antigrifer.bypass:
+    description: Bypass all AntiGrifer protection checks
+    default: op

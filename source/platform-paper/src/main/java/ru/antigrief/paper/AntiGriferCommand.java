@@ -1,7 +1,7 @@
 package ru.antigrief.paper;
 
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.TextComponent;
+
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -201,6 +201,24 @@ public class AntiGriferCommand implements CommandExecutor, TabCompleter {
                     }
                 }
             }
+            case "enable" -> {
+                String target = args.length >= 3 ? args[2] : null;
+                if (target == null) {
+                    sender.sendMessage(Component.text("✖ Укажите имя модуля.", NamedTextColor.RED));
+                    return;
+                }
+                moduleManager.enableModule(target);
+                sender.sendMessage(Component.text("✔ Модуль «" + target + "» включён.", NamedTextColor.GREEN));
+            }
+            case "disable" -> {
+                String target = args.length >= 3 ? args[2] : null;
+                if (target == null) {
+                    sender.sendMessage(Component.text("✖ Укажите имя модуля.", NamedTextColor.RED));
+                    return;
+                }
+                moduleManager.disableModule(target);
+                sender.sendMessage(Component.text("✔ Модуль «" + target + "» отключён.", NamedTextColor.YELLOW));
+            }
             case "reload" -> {
                 String target = args.length >= 3 ? args[2] : null;
                 if (target == null) {
@@ -210,7 +228,7 @@ public class AntiGriferCommand implements CommandExecutor, TabCompleter {
                 moduleManager.reloadModule(target);
                 sender.sendMessage(Component.text("✔ Модуль «" + target + "» перезагружен.", NamedTextColor.GREEN));
             }
-            default -> sender.sendMessage(Component.text("✖ Неизвестная субкоманда module.", NamedTextColor.RED));
+            default -> sender.sendMessage(Component.text("✖ Неизвестная субкоманда module. Используйте: list | enable | disable | reload", NamedTextColor.RED));
         }
     }
 

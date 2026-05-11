@@ -40,7 +40,7 @@ public class DetectionModule implements AGModule {
 
     @Override
     public void onEnable() {
-        detectionEngine.registerCheck(new LavaPlaceCheck());
+        detectionEngine.registerCheck(new LavaPlaceCheck(trustConfig, configManager, alertSystem));
         detectionEngine.registerCheck(new FireUseCheck(trustConfig, configManager, alertSystem));
         detectionEngine.registerCheck(new ExplosiveCheck(trustConfig, configManager, alertSystem));
         detectionEngine.registerCheck(new RedstoneGriefCheck(trustConfig, configManager, alertSystem));
